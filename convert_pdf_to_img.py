@@ -140,7 +140,10 @@ def main(argv: list[str] | None = None) -> None:
 
 
 # --- MCP server setup (stdio transport) ---
-mcp = FastMCP("pdf-convert-mcp")
+from mcp.server.fastmcp import FastMCP
+
+# Create an MCP server
+mcp = FastMCP()
 
 
 @mcp.tool()
