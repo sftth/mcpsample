@@ -1,11 +1,11 @@
-from fastmcp import FastMCP
+from mcp.server.fastmcp import FastMCP
 
 # Create an MCP server
-mcp = FastMCP("add-mcp-stdio")
+mcp = FastMCP()
 
 
 # Define a simple tool
-@mcp.tool
+@mcp.tool()
 def add(a: int, b: int) -> int:
     """Add two numbers together"""
     return a + b
