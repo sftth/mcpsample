@@ -1,4 +1,5 @@
 import base64
+import os
 import sys
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -8,7 +9,7 @@ from mcp.server.fastmcp import FastMCP
 
 mcp = FastMCP("convertor")
 
-DOWNLOADS_DIR = Path("/Users/summit/Downloads").expanduser().resolve()
+DOWNLOADS_DIR = Path(__file__).parent / "file"
 
 
 def _safe_pdf_filename(name: str) -> str:
@@ -66,8 +67,8 @@ def convert_pdf_in_downloads_to_png(
     return_data_url: bool = True,
 ) -> Dict[str, Any]:
     """
-    Given a PDF filename, read /Users/summit/Downloads/<filename>.pdf
-    and write /Users/summit/Downloads/<filename>.png (first page).
+    Given a PDF filename, read ./file/<filename>.pdf
+    and write ./file/<filename>.png (first page).
 
     Args:
       filename: e.g. "sample.pdf" or "sample"
@@ -128,4 +129,5 @@ def convert_pdf_in_downloads_to_png(
 
 if __name__ == "__main__":
     # STDIO transport (Claude Desktop will talk JSON-RPC over stdin/stdout)
+    print("CWD:", os.getcwd())
     mcp.run()

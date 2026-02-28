@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "doc_convertor": {
+      "command": "python",
+      "args": [
+        "c:/IDE/ws-ai/mcpsample/convert_doc_to_img_mcp.py"
+      ]
+    },
+    "convertor": {
+      "command": "python",
+      "args": [
+        "c:/IDE/ws-ai/mcpsample/convert_pdf_to_img2.py"
+      ]
+    }
+  }
+}
