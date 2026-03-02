@@ -1,0 +1,65 @@
+---
+- name: Setup midadm account on EC2
+  hosts: ec2_servers
+  become: yes
+  vars:
+    midadm_user: midadm
+    midadm_group: midadm
+    midadm_password: midadm
+  
+  tasks:
+    - name: Create midadm group
+      group:
+        name: "{{ midadm_group }}"
+        state: present
+      register: group_result
+
+    - name: Display group creation result
+      debug:
+        msg: "midadm group created successfully"
+      when: group_result.changed
+
+    - name: Create midadm user with home directory
+      user:
+        name: "{{ midadm_user }}"
+        group: "{{ midadm_group }}"
+        create_home: yes
+        shell: /bin/bash
+        state: present
+      register: user_result
+
+    - name: Display user creation result
+      debug:
+        msg: "midadm user created successfully"
+      when: user_result.changed
+
+    - name: Set password for midadm user
+      user:
+        name: "{{ midadm_user }}"
+        password: "{{ midadm_password | password_hash('sha512') }}"
+        update_password: always
+      register: password_result
+
+    - name: Display password setting result
+      debug:
+        msg: "Password set successfully for midadm user"
+      when: password_result.changed
+
+    - name: Verify midadm user exists
+      command: id {{ midadm_user }}
+      register: user_check
+      changed_when: false
+
+    - name: Display user verification
+      debug:
+        msg: "{{ user_check.stdout }}"
+
+    - name: Display completion message
+      debug:
+        msg: 
+          - "=========================================="
+          - "midadm account setup completed successfully"
+          - "User: {{ midadm_user }}"
+          - "Group: {{ midadm_group }}"
+          - "Home Directory: /home/{{ midadm_user }}"
+          - "=========================================="
