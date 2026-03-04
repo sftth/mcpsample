@@ -1,6 +1,6 @@
 # EC2 정보
-	- IP: 15.152.32.49
-	- PEM: /Users/summit/.ssh/jacob.park-keypair.pem
+	- IP: 13.208.245.251
+	- PEM: C:\\Users\\74469\\.ssh\\jacob.park-keypair.pem
 	- User: ec2-user
 
 # 엔진 경로 생성

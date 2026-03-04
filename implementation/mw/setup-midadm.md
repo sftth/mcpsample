@@ -1,5 +1,5 @@
 # EC2 정보
-	- IP: 56.155.32.25
+	- IP: 13.208.245.251
 	- PEM: /Users/summit/.ssh/jacob.park-keypair.pem
 	- User: ec2-user
 

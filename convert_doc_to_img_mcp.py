@@ -24,7 +24,8 @@ from mcp.server.fastmcp import FastMCP
 
 mcp = FastMCP("doc_convertor")
 
-DOWNLOADS_DIR = Path(__file__).parent / "file"
+DOWNLOADS_DIR = Path(__file__).parent / "file" / "doc"
+OUTPUT_DIR = Path(__file__).parent / "file" / "img"
 
 
 def _safe_doc_filename(name: str) -> str:
@@ -233,9 +234,12 @@ def convert_doc_in_downloads_to_png(
                 raise RuntimeError("Failed to convert document to PDF")
             
             # Step 2: Convert PDF to PNG
+            # Ensure output directory exists
+            OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+            
             if first_page_only:
                 png_name = doc_path.stem + ".png"
-                png_path = (DOWNLOADS_DIR / png_name).resolve()
+                png_path = (OUTPUT_DIR / png_name).resolve()
 
                 if (not overwrite) and png_path.exists():
                     return {
