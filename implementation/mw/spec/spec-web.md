@@ -1,8 +1,3 @@
-# EC2 정보
-	- IP: 13.208.245.251
-	- PEM: C:\\Users\\74469\\.ssh\\jacob.park-keypair.pem
-	- User: ec2-user
-
 # 엔진 경로 생성
     - 계정 변경: sudo su
     - 경로 생성: mkdir /engn001
@@ -29,5 +24,12 @@
 # setcap 설정
     - sudo setcap 'cap_net_bind_service=+ep' /engn001/apache/2.4.66/bin/httpd
     - getcap /engn001/apache/2.4.66/bin/httpd
-    
 
+# web 서버 시작
+    - 경로: /engn001/apache/2.4.66/servers/webd-asc_80
+    - "경로"의 start.sh 실행
+
+# web 서버 기동 점검
+    - 경로: /sorc001/appadm/applications/htdocs
+    - "Test" 문자를 표출하는 index.html 생성 및 "경로"에 저장
+    - curl 로 접속 테스트
