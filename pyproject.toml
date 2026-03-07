@@ -11,4 +11,8 @@ dependencies = [
     "pillow",
     "pytesseract>=0.3.13",
     "easyocr>=1.7.2",
+    "paramiko>=3.0.0",
+    "chromadb>=0.4.0",
+    "sentence-transformers>=2.0.0",
+    "scp>=0.14.0",
 ]

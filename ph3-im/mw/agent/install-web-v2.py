@@ -19,7 +19,7 @@ from chromadb.utils import embedding_functions
 MIDADM_USER = "midadm"
 
 # Apache configuration
-APACHE_TAR_FILE = r"c:\IDE\ws-ai\mcpsample\implementation\mw\apache-2.4.66.tar.gz"
+APACHE_TAR_FILE = "/home/ec2-user/mcpsample/ph3-im/mw/apache-2.4.66.tar.gz"
 ENGN_PATH = "/engn001"
 LOGS_PATH = "/logs001/apache/2.4.66/servers/webd-asc_80/logs"
 SORC_PATH = "/sorc001/appadm/applications/htdocs"

@@ -67,6 +67,8 @@ def _convert_doc_to_pdf_libreoffice(doc_path: Path, pdf_path: Path) -> None:
     
     # Try common LibreOffice paths
     libreoffice_paths = [
+        "/opt/libreoffice26.2/program/soffice",
+        "/opt/libreoffice25.8/program/soffice",
         "libreoffice",
         "soffice",
         r"C:\Program Files\LibreOffice\program\soffice.exe",

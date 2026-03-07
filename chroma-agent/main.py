@@ -19,9 +19,9 @@ collection = client.get_or_create_collection(
 # ==========================
 
 documents = [
-    "EC2 IP 정보: 13.208.43.174,15.168.175.207",
+    "EC2 IP 정보: 15.168.235.199,56.155.82.169",
     "EC2 SSH User 정보: ec2-user",
-    "EC2 PEM 경로: C:\\Users\\74469\\.ssh\\jacob.park-keypair.pem"
+    "EC2 PEM 경로: /home/ec2-user/.ssh/jacob.park-keypair.pem"
 ]
 
 ids = [

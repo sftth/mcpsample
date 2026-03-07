@@ -24,8 +24,11 @@ from mcp.server.fastmcp import FastMCP
 
 mcp = FastMCP("doc_convertor")
 
-DOWNLOADS_DIR = Path(__file__).parent / "file" / "doc"
-OUTPUT_DIR = Path(__file__).parent / "file" / "img"
+# Use environment variable or fallback to cwd
+# MCP server should be run from project root with cwd set in config
+BASE_DIR = Path(os.environ.get("MCP_BASE_DIR", Path.cwd()))
+DOWNLOADS_DIR = BASE_DIR / "file" / "doc"
+OUTPUT_DIR = BASE_DIR / "file" / "img"
 
 
 def _safe_doc_filename(name: str) -> str:
@@ -69,6 +72,8 @@ def _convert_doc_to_pdf_libreoffice(doc_path: Path, pdf_path: Path) -> None:
     
     # Try common LibreOffice paths
     libreoffice_paths = [
+        "/opt/libreoffice26.2/program/soffice",
+        "/opt/libreoffice25.8/program/soffice",
         "libreoffice",
         "soffice",
         r"C:\Program Files\LibreOffice\program\soffice.exe",
@@ -208,7 +213,7 @@ def convert_doc_in_downloads_to_png(
         doc_path = (DOWNLOADS_DIR / safe_name).resolve()
 
         # Hard guard: must remain within Downloads
-        if DOWNLOADS_DIR not in doc_path.parents:
+        if not str(doc_path).startswith(str(DOWNLOADS_DIR.resolve())):
             raise PermissionError("Access outside Downloads is not allowed.")
 
         if not doc_path.exists():
