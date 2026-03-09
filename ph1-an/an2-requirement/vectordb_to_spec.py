@@ -5,12 +5,12 @@
 입력:
 - 벡터DB: chroma-agent
 - 포맷: ph3-im/mw/spec/spec-account.md
-- 저장: ph1-an/an2-requirement/spec-account01.md
+- 저장: ph2-de/spec-account.md
 
 처리:
 1. 벡터DB에서 모든 데이터 조회
 2. spec-account.md 포맷으로 변환
-3. spec-account01.md 파일로 저장
+3. ph2-de/spec-account.md 파일로 저장
 """
 
 import chromadb
@@ -82,9 +82,9 @@ def extract_vectordb_to_spec():
     
     spec_content = generate_spec_format(all_data)
     
-    # 4. 파일로 저장
+    # 4. 파일로 저장 (ph2-de 디렉토리로 변경)
     print("\n[4단계] 파일 저장 중...")
-    output_path = "/home/ec2-user/mcpsample/ph1-an/an2-requirement/spec-account01.md"
+    output_path = "/home/ec2-user/mcpsample/ph2-de/spec-account.md"
     
     try:
         with open(output_path, 'w', encoding='utf-8') as f:
@@ -104,81 +104,107 @@ def generate_spec_format(data):
     
     # spec-account.md 포맷 기반 템플릿
     spec_lines = []
-    spec_lines.append("# 요구사항 정의서")
+    spec_lines.append("# EC2 인프라 정보")
     spec_lines.append("")
     spec_lines.append("## 문서 정보")
+    spec_lines.append("벡터DB(chroma-agent)에서 추출한 EC2 인프라 정보입니다.")
     spec_lines.append("")
     
-    # 페이지별로 데이터 정리
-    pages = {}
+    # 인프라 정보 분류
+    ec2_info = {
+        'ip': [],
+        'ssh_user': [],
+        'pem_path': [],
+        'other': []
+    }
     
     for doc_id, document, metadata in zip(
         data['ids'], 
         data['documents'], 
         data['metadatas']
     ):
-        if metadata and metadata.get('type') == 'requirement':
-            page = metadata.get('page', 'unknown')
-            pages[page] = {
-                'id': doc_id,
-                'document': document,
-                'metadata': metadata
-            }
+        if metadata and metadata.get('type') == 'infrastructure':
+            field = metadata.get('field', 'other')
+            if field in ec2_info:
+                ec2_info[field].append({
+                    'id': doc_id,
+                    'document': document,
+                    'metadata': metadata
+                })
+            else:
+                ec2_info['other'].append({
+                    'id': doc_id,
+                    'document': document,
+                    'metadata': metadata
+                })
     
-    # 페이지 순서대로 정렬
-    sorted_pages = sorted(pages.items(), key=lambda x: x[0])
-    
-    # 각 페이지 내용 추가
-    for page_num, page_data in sorted_pages:
-        spec_lines.append(f"## 페이지 {page_num}")
+    # EC2 IP 정보
+    if ec2_info['ip']:
+        spec_lines.append("## EC2 IP 정보")
         spec_lines.append("")
-        
-        # 메타데이터 정보
-        metadata = page_data['metadata']
-        spec_lines.append("### 메타데이터")
-        spec_lines.append(f"  - 소스: {metadata.get('source', 'N/A')}")
-        spec_lines.append(f"  - 파일명: {metadata.get('filename', 'N/A')}")
-        spec_lines.append(f"  - 타입: {metadata.get('type', 'N/A')}")
-        spec_lines.append("")
-        
-        # 문서 내용
-        spec_lines.append("### 내용")
-        spec_lines.append("```")
-        spec_lines.append(page_data['document'])
-        spec_lines.append("```")
+        for item in ec2_info['ip']:
+            spec_lines.append(f"  - {item['document']}")
+            if item['metadata'].get('owner'):
+                spec_lines.append(f"    - 담당자: {item['metadata']['owner']}")
         spec_lines.append("")
     
-    # EC2 정보 추출 (페이지 004에서)
-    if '004' in pages:
-        spec_lines.append("## EC2 인프라 정보 (추출)")
+    # SSH User 정보
+    if ec2_info['ssh_user']:
+        spec_lines.append("## SSH 접속 정보")
         spec_lines.append("")
-        spec_lines.append("페이지 004에서 추출된 EC2 정보:")
+        for item in ec2_info['ssh_user']:
+            spec_lines.append(f"  - {item['document']}")
         spec_lines.append("")
-        
-        content = pages['004']['document']
-        
-        # Web1, Web2 정보 파싱
-        if 'Web1' in content or 'Web2' in content:
-            spec_lines.append("### Web 서버 정보")
-            spec_lines.append("")
-            
-            # 간단한 파싱 (실제로는 더 정교한 파싱 필요)
-            lines = content.split('\n')
-            for line in lines:
-                if line.strip():
-                    spec_lines.append(f"  {line.strip()}")
-            spec_lines.append("")
+    
+    # PEM 경로 정보
+    if ec2_info['pem_path']:
+        spec_lines.append("## PEM 키 경로")
+        spec_lines.append("")
+        for item in ec2_info['pem_path']:
+            spec_lines.append(f"  - {item['document']}")
+        spec_lines.append("")
+    
+    # 기타 정보
+    if ec2_info['other']:
+        spec_lines.append("## 기타 정보")
+        spec_lines.append("")
+        for item in ec2_info['other']:
+            spec_lines.append(f"  - ID: {item['id']}")
+            spec_lines.append(f"    - 내용: {item['document']}")
+            spec_lines.append(f"    - 메타데이터: {item['metadata']}")
+        spec_lines.append("")
     
     # 요약 정보
     spec_lines.append("## 요약")
     spec_lines.append("")
-    spec_lines.append(f"  - 총 페이지 수: {len(pages)}")
-    spec_lines.append(f"  - 문서 타입: 요구사항 정의서")
-    if sorted_pages:
-        first_page = sorted_pages[0][1]
-        source = first_page['metadata'].get('source', 'N/A')
-        spec_lines.append(f"  - 소스 문서: {source}")
+    total_docs = len(data['ids'])
+    spec_lines.append(f"  - 총 문서 수: {total_docs}")
+    spec_lines.append(f"  - IP 정보: {len(ec2_info['ip'])}개")
+    spec_lines.append(f"  - SSH User 정보: {len(ec2_info['ssh_user'])}개")
+    spec_lines.append(f"  - PEM 경로 정보: {len(ec2_info['pem_path'])}개")
+    spec_lines.append(f"  - 기타 정보: {len(ec2_info['other'])}개")
     spec_lines.append("")
+    
+    # 상세 데이터 (참고용)
+    spec_lines.append("## 상세 데이터 (참고)")
+    spec_lines.append("")
+    for i, (doc_id, document, metadata) in enumerate(zip(
+        data['ids'], 
+        data['documents'], 
+        data['metadatas']
+    ), 1):
+        spec_lines.append(f"### {i}. {doc_id}")
+        spec_lines.append("")
+        spec_lines.append("**문서 내용:**")
+        spec_lines.append(f"```")
+        spec_lines.append(document)
+        spec_lines.append(f"```")
+        spec_lines.append("")
+        spec_lines.append("**메타데이터:**")
+        if metadata:
+            for key, value in metadata.items():
+                spec_lines.append(f"  - {key}: {value}")
+        spec_lines.append("")
     
     return '\n'.join(spec_lines)
 

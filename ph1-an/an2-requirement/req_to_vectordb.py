@@ -43,37 +43,112 @@ def extract_text_from_images(image_dir: str, pattern: str) -> dict:
     
     return extracted_data
 
+def parse_ec2_info_from_text(all_text: str) -> dict:
+    """텍스트에서 EC2 정보 파싱"""
+    import re
+    
+    ec2_info = {
+        'ips': set(),
+        'ssh_user': None,
+        'pem_path': None
+    }
+    
+    # IP 주소 패턴 찾기 (xxx.xxx.xxx.xxx)
+    ip_pattern = r'\b(?:\d{1,3}\.){3}\d{1,3}\b'
+    ips = re.findall(ip_pattern, all_text)
+    
+    for ip in ips:
+        # 유효한 IP인지 확인
+        parts = ip.split('.')
+        try:
+            if all(0 <= int(p) <= 255 for p in parts):
+                ec2_info['ips'].add(ip)
+        except ValueError:
+            continue
+    
+    # SSH User 찾기
+    if 'ec2-user' in all_text.lower():
+        ec2_info['ssh_user'] = 'ec2-user'
+    elif 'ubuntu' in all_text.lower():
+        ec2_info['ssh_user'] = 'ubuntu'
+    
+    # PEM 경로 찾기
+    pem_patterns = [
+        r'/[^\s]+\.pem',
+        r'[^\s]+keypair\.pem'
+    ]
+    
+    for pattern in pem_patterns:
+        pem_matches = re.findall(pattern, all_text)
+        if pem_matches:
+            ec2_info['pem_path'] = pem_matches[0]
+            break
+    
+    # 기본 경로 추정 (jacob.park 키워드가 있는 경우)
+    if not ec2_info['pem_path'] and 'jacob' in all_text.lower() and 'park' in all_text.lower():
+        ec2_info['pem_path'] = '/home/ec2-user/.ssh/jacob.park-keypair.pem'
+    
+    return ec2_info
+
+
 def format_as_spec(extracted_data: dict) -> list:
-    """추출된 텍스트를 spec 포맷으로 변환"""
-    print("\n📝 데이터 포맷 변환 중...")
+    """추출된 텍스트에서 EC2 정보를 추출하여 지정된 포맷으로 변환"""
+    print("\n📝 EC2 정보 추출 및 포맷 변환 중...")
+    
+    # 모든 텍스트를 하나로 합치기
+    all_text = '\n\n'.join(extracted_data.values())
+    
+    # EC2 정보 파싱
+    ec2_info = parse_ec2_info_from_text(all_text)
+    
+    print(f"\n🔍 추출된 EC2 정보:")
+    print(f"  - IP 주소: {list(ec2_info['ips'])}")
+    print(f"  - SSH User: {ec2_info['ssh_user']}")
+    print(f"  - PEM 경로: {ec2_info['pem_path']}")
     
     documents = []
     ids = []
     metadatas = []
     
-    for idx, (filename, text) in enumerate(extracted_data.items(), 1):
-        # 페이지 번호 추출
-        page_num = filename.split('_page_')[-1].replace('.png', '')
-        
-        # 문서 ID 생성
-        doc_id = f"requirement_page_{page_num}"
-        
-        # 문서 내용 (spec 포맷 스타일로)
-        document = f"# 요구사항 정의서 - 페이지 {page_num}\n\n{text}"
-        
-        # 메타데이터
-        metadata = {
-            "type": "requirement",
-            "source": "1650-01_요구사항정의서_v1.0",
-            "page": page_num,
-            "filename": filename
-        }
-        
-        documents.append(document)
-        ids.append(doc_id)
-        metadatas.append(metadata)
-        
-        print(f"  ✓ {doc_id} 변환 완료")
+    # EC2 IP 정보
+    if ec2_info['ips']:
+        ip_list = ','.join(sorted(ec2_info['ips']))
+        documents.append(f"EC2 IP 정보: {ip_list}")
+        ids.append("ec2_ip_list")
+        metadatas.append({
+            "type": "infrastructure",
+            "service": "ec2",
+            "field": "ip",
+            "owner": "jacob.park"
+        })
+        print(f"  ✓ ec2_ip_list 변환 완료")
+    
+    # EC2 SSH User 정보
+    if ec2_info['ssh_user']:
+        documents.append(f"EC2 SSH User 정보: {ec2_info['ssh_user']}")
+        ids.append("ec2_ssh_user")
+        metadatas.append({
+            "type": "infrastructure",
+            "service": "ec2",
+            "field": "ssh_user",
+            "owner": "jacob.park"
+        })
+        print(f"  ✓ ec2_ssh_user 변환 완료")
+    
+    # EC2 PEM 경로
+    if ec2_info['pem_path']:
+        documents.append(f"EC2 PEM 경로: {ec2_info['pem_path']}")
+        ids.append("ec2_pem_path")
+        metadatas.append({
+            "type": "infrastructure",
+            "service": "ec2",
+            "field": "pem_path",
+            "owner": "jacob.park"
+        })
+        print(f"  ✓ ec2_pem_path 변환 완료")
+    
+    if not documents:
+        print("  ⚠️  추출된 EC2 정보가 없습니다.")
     
     return documents, ids, metadatas
 
@@ -130,28 +205,28 @@ def test_search(collection):
     print("\n🔎 검색 테스트 수행 중...")
     
     test_queries = [
-        "요구사항은 무엇인가?",
-        "시스템 구성은?",
-        "기능 요구사항"
+        "EC2 접속 정보",
+        "IP 주소는?",
+        "PEM 파일 경로"
     ]
     
     for query in test_queries:
         print(f"\n  질문: {query}")
         result = collection.query(
             query_texts=[query],
-            n_results=2
+            n_results=3
         )
         
         if result['documents'] and result['documents'][0]:
             for i, doc in enumerate(result['documents'][0], 1):
-                print(f"    {i}. {doc[:100]}...")
+                print(f"    {i}. {doc}")
                 if result['metadatas'] and result['metadatas'][0]:
                     print(f"       메타데이터: {result['metadatas'][0][i-1]}")
 
 def main():
     """메인 실행 함수"""
     print("=" * 60)
-    print("이미지 → 텍스트 추출 → 벡터DB 등록 프로세스 시작")
+    print("이미지 → EC2 정보 추출 → 벡터DB 등록 프로세스 시작")
     print("=" * 60)
     
     try:
@@ -160,8 +235,12 @@ def main():
         pattern = "1650-01_요구사항정의서_v1.0_page_*.png"
         extracted_data = extract_text_from_images(image_dir, pattern)
         
-        # 2. spec 포맷으로 변환
+        # 2. EC2 정보 추출 및 포맷 변환
         documents, ids, metadatas = format_as_spec(extracted_data)
+        
+        if not documents:
+            print("\n❌ 추출된 EC2 정보가 없습니다. 처리를 중단합니다.")
+            return 1
         
         # 3. 벡터DB에 등록
         collection = register_to_vectordb(documents, ids, metadatas)

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "requirements-extractor": {
+      "command": "uv",
+      "args": [
+        "run",
+        "/home/ec2-user/mcpsample/mcp-server-req-extractor.py"
+      ],
+      "description": "이미지에서 요구사항을 추출하여 spec-design.md를 생성하는 MCP 서버"
+    }
+  }
+}
